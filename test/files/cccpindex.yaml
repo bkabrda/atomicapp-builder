@@ -1,0 +1,35 @@
+# This is the main index.
+
+Projects:
+  - id          : default
+    app-id      : appone
+    job-id      :
+    git-url     : https://github.com/bkabrda/appone.git
+    git-path    : .
+    # don't provide a git branch here, thus implying 'master'
+
+  - id          : default
+    app-id      : apptwo
+    job-id      :
+    git-url     : https://github.com/bkabrda/apptwo.git
+    git-path    : nuleculestuff
+    git-branch  : stable
+
+  - id          : default
+    app-id      : appthree
+    job-id      :
+    git-url     : https://github.com/bkabrda/appthree.git
+    git-path    :
+    # don't provide a git branch here, thus implying 'master'
+    # NOTE: apptwo and appthree intentionally have circular dependency
+
+  - id          : default
+    app-id      : appfour
+    job-id      :
+    git-url     : https://github.com/bkabrda/appfour.git
+    git-path    :
+    git-branch  : stable
+
+# Add your job below this line, you can use the 'default' project
+# from the top of this file as a template. All values are required.
+

@@ -1,0 +1,2 @@
+class AtomicappBuilderException(Exception):
+    pass
