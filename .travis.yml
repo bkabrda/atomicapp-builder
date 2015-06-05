@@ -10,7 +10,7 @@ cache:
     - $HOME/.cache/pip
 
 install: 
-- pip install -r requirements-devel.txt --use-mirrors
+- pip install -r requirements-devel.txt
 - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install argparse; fi
 
 script: py.test
