@@ -6,6 +6,7 @@ import sys
 import atomicapp_builder
 from atomicapp_builder import builder
 from atomicapp_builder import constants
+from atomicapp_builder import exceptions
 from atomicapp_builder import resolver
 
 logger = logging.getLogger(__name__)
@@ -92,9 +93,12 @@ def run():
     atomicapp_builder.set_logging(args['log_level'])
 
     if args['action'] == 'build':
+        result = 1
         try:
             result = build(args)
+        except exceptions.AtomicappBuilderException as e:
+            print(e.to_str())
+            logger.error(e.to_str())
         except Exception as e:
-            result = 1
             logger.exception('Exception while running {0}:'.format(sys.argv[0]))
         sys.exit(result)

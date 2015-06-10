@@ -1,3 +1,4 @@
+import logging
 import os
 import subprocess
 
@@ -5,6 +6,8 @@ import anymarkup
 import requests
 
 from atomicapp_builder import exceptions
+
+logger = logging.getLogger(__name__)
 
 
 class Resolver(object):
@@ -27,7 +30,9 @@ class Resolver(object):
         {<name>: <other_graph_object_attrs>}.
         """
         # TODO: can be named differently; inspect .cccp.yaml to find out
-        nlc_content = anymarkup.parse_file(os.path.join(path, 'Nulecule'))
+        nlc_path = os.path.join(path, 'Nulecule')
+        logger.debug('Reading Nulecule from: {0}'.format(nlc_path))
+        nlc_content = anymarkup.parse_file(nlc_path)
         # TODO: we want to implement graph as object and hide details and potential
         #  differencies in Nulecule spec versions behind it
         appid = nlc_content['id']
@@ -50,12 +55,15 @@ class Resolver(object):
                 'Project "{0}" not found in index, cannot proceed'.format(appid))
 
         try:
+            logger.debug('Checking out application {0}'.format(appid))
             cmd = ['git', '-C', self.tmpdir, 'clone', found['git-url'], appid]
             if 'git-branch' in found and found['git-branch']:
                 cmd.extend(['-b', found['git-branch']])
             subprocess.check_call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        except (OSError, subprocess.CalledProcessError):
-            raise  # TODO: handle?
+            logger.debug('Application {0} checked out at {1}'\
+                    .format(appid, os.path.join(self.tmpdir, appid)))
+        except (OSError, subprocess.CalledProcessError) as ex:
+            raise exceptions.AtomicappBuilderException(ex)
 
         return os.path.join(self.tmpdir, appid, found['git-path'] or '')
 
