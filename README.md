@@ -27,4 +27,4 @@ optional arguments:
 Requires `anymarkup`, `requests` and `dock`. You can get the first two just by typing
 `pip install --user -r requirements.txt` and you can get `dock` from
 https://github.com/DBuildService/dock. This also requires `dock`'s build image. You
-can either get one from TODO or build one yourself.
+can either get one by `docker pull slavek/buildroot` or build one yourself.
