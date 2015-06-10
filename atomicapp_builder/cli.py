@@ -22,11 +22,13 @@ def create_parser():
         dest='build_image',
         help='Name of image that Dock should use to build images (defaults to "buildroot")',
         default='buildroot')
-    build_sp.add_argument(
-        '--tag',
-        dest='tag',
-        help='Tag for the resulting image (app id will be used if tag is not provided)',
-        default=None)
+    # TODO: we would need to be able to specify tags for all built images,
+    #  so we'll have to think of something smarter than just one tag, probably
+    # build_sp.add_argument(
+    #    '--tag',
+    #    dest='tag',
+    #    help='Tag for the resulting image (app id will be used if tag is not provided)',
+    #    default=None)
     build_sp.add_argument(
         '-q', '--quiet',
         dest='quiet',
@@ -48,7 +50,7 @@ def build(args):
     build_results = {}
     # we build one by one, since builder is not thread safe (because dock is not)
     for image_name, df_path in to_build.items():
-        bldr = builder.Builder(args['build_image'], df_path, image_name, args['tag'])
+        bldr = builder.Builder(args['build_image'], df_path, image_name) #  , args['tag'])
         build_results[image_name] = bldr.build(wait=True, stream=not args['quiet'])
 
     failed = []
