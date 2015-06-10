@@ -20,7 +20,8 @@ def create_parser():
     build_sp.add_argument(
         '--cccp-index',
         dest='cccp_index',
-        help='URI of raw cccp index file (can be file:// for local file)',
+        help='URI of raw cccp index file (can be file:// for local file), defaults to '
+        'https://raw.githubusercontent.com/kbsingh/cccp-index/master/index.yml',
         default=constants.DEFAULT_CCCP_INDEX)
     build_sp.add_argument(
         '--build-image',
