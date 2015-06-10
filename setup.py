@@ -10,7 +10,7 @@ setup(
     name='atomicapp_builder',
     version='0.0.1',
     description='Application for building Atomicapps',
-    long_description=''.join(open('README.rst').readlines()),
+    long_description=''.join(open('README.md').readlines()),
     keywords='atomic, atomicapp, docker, nulecule',
     author='Slavek Kabrda',
     author_email='slavek@redhat.com',
