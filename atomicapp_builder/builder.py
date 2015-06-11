@@ -20,7 +20,7 @@ class Builder(object):
 
         :return: dock's BuildResults object
         """
-        tag = self.tag or self.image_name
+        tag = self.tag or self.image_name.to_str()
 
         dock.set_logging(level=log_level)
         logger.info('Building image "{0}"'.format(tag))

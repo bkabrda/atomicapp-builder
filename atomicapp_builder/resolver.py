@@ -3,18 +3,25 @@ import os
 import subprocess
 
 import anymarkup
+import dock.util
 import requests
 
 from atomicapp_builder import exceptions
+from atomicapp_builder import docker_registry
 
 logger = logging.getLogger(__name__)
 
 
 class Resolver(object):
-    def __init__(self, top_app, cccp_index_uri, tmpdir):
+    def __init__(self, top_app, cccp_index_uri, docker_registry_url, tmpdir):
         self.top_app = top_app
         self.cccp_index_uri = cccp_index_uri
         self.tmpdir = tmpdir
+        self.docker_registry_url = docker_registry_url
+        if docker_registry_url:
+            self.docker_registry = docker_registry.DockerRegistry(docker_registry_url)
+        else:
+            self.docker_registry = None
         self.cccp_index = None
 
     def read_cccp_index(self):
@@ -67,7 +74,13 @@ class Resolver(object):
 
         return os.path.join(self.tmpdir, appid, found['git-path'] or '')
 
-    def get_appids_to_build(self, top_app):
+    def get_all_appids(self, top_app):
+        """Returns ids of all apps that given top_app depends on.
+
+        :param top_app: path to top_app to resolve dependencies for
+
+        :return: mapping - `{<app_id>: <path_to_cloned_git_repo>, ...}`
+        """
         this_appid, alldeps = self.read_nulecule(top_app)
         to_build = {this_appid: top_app}
         while len(alldeps) > 0:
@@ -83,10 +96,26 @@ class Resolver(object):
         return to_build
 
     def resolve(self):
+        """Resolve built and nonbuilt images.
+
+        :return: 2-tuple of two dicts in form {<dock.util.ImageName()>: path_to_cloned_repo}
+            the first dict contains already built images, the second dict nonbuilt images
+        """
         self.read_cccp_index()
         if self.top_app.startswith('cccp:'):
             top_app_path = self.checkout_app(self.top_app[len('cccp:'):])
         else:
             top_app_path = self.top_app
 
-        return self.get_appids_to_build(top_app_path)
+        alldeps = self.get_all_appids(top_app_path)
+        built = {}
+        nonbuilt = {}
+
+        for dep, path in alldeps.items():
+            img_name = dock.util.ImageName(registry=self.docker_registry_url, repo=dep)
+            if self.docker_registry and self.docker_registry.has_image(img_name):
+                built[img_name] = path
+            else:
+                nonbuilt[img_name] = path
+
+        return built, nonbuilt

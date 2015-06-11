@@ -29,6 +29,11 @@ def create_parser():
         dest='build_image',
         help='Name of image that Dock should use to build images (defaults to "buildroot")',
         default='buildroot')
+    build_sp.add_argument(
+        '--docker-registry',
+        dest='docker_registry',
+        help='URL of Docker registry to poll for existing images and push built images to',
+        default=None)
     # TODO: we would need to be able to specify tags for all built images,
     #  so we'll have to think of something smarter than just one tag, probably
     # build_sp.add_argument(
@@ -58,8 +63,17 @@ def create_parser():
 
 
 def build(args):
+    imgs_to_str = lambda imgs: ' '.join([i.repo for i in imgs])
+
+    # first resolve the images that were already built and that we'll need to build
     tmpdir = tempfile.mkdtemp()
-    to_build = resolver.Resolver(args['what'], args['cccp_index'], tmpdir).resolve()
+    already_built, to_build = resolver.Resolver(
+        args['what'],
+        args['cccp_index'],
+        args['docker_registry'],
+        tmpdir).resolve()
+    logger.info('Images already built: {0}'.format(imgs_to_str(already_built) or '<None>'))
+    logger.info('Images to build: {0}'.format(imgs_to_str(to_build) or '<None>'))
 
     build_results = {}
     # we build one by one, since builder is not thread safe (because dock is not)
@@ -67,6 +81,7 @@ def build(args):
         bldr = builder.Builder(args['build_image'], df_path, image_name) #  , args['tag'])
         build_results[image_name] = bldr.build(wait=True, log_level=args['log_level'])
 
+    # found out which ones failed and succeeded and print this info
     failed = []
     succeeded = []
     for image, result in build_results.items():
@@ -76,10 +91,10 @@ def build(args):
             succeeded.append(image)
 
     if succeeded:
-        logging.info('Images built successfully:')
-        print('\n'.join(succeeded))
+        logger.info('Images built successfully:')
+        print(imgs_to_str(succeeded).replace(' ', '\n'))
     for f in failed:
-        print('Failed to build image {0}'.format(f))
+        print('Failed to build image {0}'.format(f.repo))
     return len(failed)
 
 
