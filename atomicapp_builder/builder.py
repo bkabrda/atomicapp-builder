@@ -1,6 +1,7 @@
 import logging
 
 import dock
+from dock import api as dapi
 
 logger = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ class Builder(object):
 
         dock.set_logging(level=log_level)
         logger.info('Building image "{0}"'.format(tag))
-        response = dock.build_image_using_hosts_docker(
+        response = dapi.build_image_using_hosts_docker(
             self.build_image,
             {'provider': 'path', 'uri': 'file://' + self.df_path},
             tag,
