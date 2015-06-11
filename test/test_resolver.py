@@ -5,6 +5,7 @@ import tempfile
 from dock.util import ImageName
 from flexmock import flexmock
 import pytest
+import requests
 
 from atomicapp_builder.resolver import Resolver
 
@@ -61,10 +62,17 @@ class TestResolver(object):
         cccp_index = prep_cccp_index(tmpdir)
         app_path = prep_app(app, tmpdir, branch)
         r = Resolver(app_path, cccp_index, someregistry, str(tmpdir))
+        request_url = someregistry + '/v1/repositories/{0}/tags'
         for b in built:
-            flexmock(r.docker_registry).should_receive('has_image').with_args(b).and_return(True)
+            class X(object):
+                status_code = 200
+            flexmock(requests).should_receive('get').\
+                with_args(request_url.format(b.to_str(registry=False, tag=False))).and_return(X())
         for nb in nonbuilt:
-            flexmock(r.docker_registry).should_receive('has_image').with_args(nb).and_return(False)
+            class Y(object):
+                status_code = 404
+            flexmock(requests).should_receive('get').\
+                with_args(request_url.format(nb.to_str(registry=False, tag=False))).and_return(Y())
 
         res_built, res_nonbuilt = r.resolve()
         assert len(res_built) == len(built)
