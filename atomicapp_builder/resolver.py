@@ -13,13 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 class Resolver(object):
-    def __init__(self, top_app, cccp_index_uri, docker_registry_url, tmpdir):
+    def __init__(self, top_app, cccp_index_uri, docker_registry_url, registry_insecure, tmpdir):
         self.top_app = top_app
         self.cccp_index_uri = cccp_index_uri
         self.tmpdir = tmpdir
         self.docker_registry_url = docker_registry_url
+        self.registry_insecure = registry_insecure
         if docker_registry_url:
-            self.docker_registry = docker_registry.DockerRegistry(docker_registry_url)
+            self.docker_registry = \
+                docker_registry.DockerRegistry(docker_registry_url, registry_insecure)
         else:
             self.docker_registry = None
         self.cccp_index = None

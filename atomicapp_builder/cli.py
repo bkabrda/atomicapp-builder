@@ -32,8 +32,15 @@ def create_parser():
     build_sp.add_argument(
         '--docker-registry',
         dest='docker_registry',
-        help='URL of Docker registry to poll for existing images and push built images to',
+        help='URL of Docker registry to poll for existing images and push built images to. '
+             'Must be without http/https scheme.',
         default=None)
+    build_sp.add_argument(
+        '--registry-insecure',
+        dest='registry_insecure',
+        help='If used, plain http will be used to connect to registry instead of https',
+        action='store_true',
+        default=False)
     # TODO: we would need to be able to specify tags for all built images,
     #  so we'll have to think of something smarter than just one tag, probably
     # build_sp.add_argument(
@@ -71,6 +78,7 @@ def build(args):
         args['what'],
         args['cccp_index'],
         args['docker_registry'],
+        args['registry_insecure'],
         tmpdir).resolve()
     logger.info('Images already built: {0}'.format(imgs_to_str(already_built) or '<None>'))
     logger.info('Images to build: {0}'.format(imgs_to_str(to_build) or '<None>'))
@@ -78,20 +86,31 @@ def build(args):
     build_results = {}
     # we build one by one, since builder is not thread safe (because dock is not)
     for image_name, df_path in to_build.items():
-        bldr = builder.Builder(args['build_image'], df_path, image_name) #  , args['tag'])
+        bldr = builder.Builder(
+            args['build_image'],
+            df_path,
+            image_name,
+            registry=args['docker_registry'],
+            registry_insecure=args['registry_insecure'])
         build_results[image_name] = bldr.build(wait=True, log_level=args['log_level'])
 
     # found out which ones failed and succeeded and print this info
     failed = []
     succeeded = []
     for image, result in build_results.items():
+        # TODO: save build logs from individual builds to a log file for inspection?
         if result.return_code != 0:
+            for l in result.build_logs:
+                print(l)
             failed.append(image)
         else:
             succeeded.append(image)
 
     if succeeded:
-        logger.info('Images built successfully:')
+        if args['docker_registry']:
+            logger.info('Images built and pushed successfully:')
+        else:
+            logger.info('Images built successfully:')
         print(imgs_to_str(succeeded).replace(' ', '\n'))
     for f in failed:
         print('Failed to build image {0}'.format(f.repo))
@@ -112,7 +131,6 @@ def run():
         try:
             result = build(args)
         except exceptions.AtomicappBuilderException as e:
-            print(e.to_str())
             logger.error(e.to_str())
         except Exception as e:
             logger.exception('Exception while running {0}:'.format(sys.argv[0]))
