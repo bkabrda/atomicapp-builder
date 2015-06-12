@@ -16,7 +16,7 @@ apptwo = ImageName(repo='apptwo')
 appthree = ImageName(repo='appthree')
 appfour = ImageName(repo='appfour')
 
-someregistry = 'https://foo/'
+someregistry = 'foo/'
 appone_reg = ImageName(registry=someregistry, repo='appone')
 apptwo_reg = ImageName(registry=someregistry, repo='apptwo')
 appthree_reg = ImageName(registry=someregistry, repo='appthree')
@@ -42,7 +42,7 @@ class TestResolver(object):
             app_path = os.path.join(app_path, 'nuleculestuff')
         cccp_index = prep_cccp_index(tmpdir)
 
-        r = Resolver(app_path, cccp_index, None, str(tmpdir))
+        r = Resolver(app_path, cccp_index, None, True, str(tmpdir))
         built, nonbuilt = r.resolve()
         assert built == {}
         for k, v in nonbuilt.items():
@@ -61,8 +61,8 @@ class TestResolver(object):
     def test_resolve_when_images_exist(self, tmpdir, app, branch, built, nonbuilt):
         cccp_index = prep_cccp_index(tmpdir)
         app_path = prep_app(app, tmpdir, branch)
-        r = Resolver(app_path, cccp_index, someregistry, str(tmpdir))
-        request_url = someregistry + '/v1/repositories/{0}/tags'
+        r = Resolver(app_path, cccp_index, someregistry, False, str(tmpdir))
+        request_url = 'https://' + someregistry + '/v1/repositories/{0}/tags'
         for b in built:
             class X(object):
                 status_code = 200
