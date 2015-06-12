@@ -3,6 +3,8 @@ import logging
 import dock
 from dock import api as dapi
 
+import atomicapp_builder
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,19 +18,17 @@ class Builder(object):
         self.registry = registry
         self.registry_insecure = registry_insecure
 
-    def build(self, wait=True, log_level=logging.INFO):
+    def build(self):
         """Build Docker image using dock.
-
-        :param wait: currently unused
-        :param log_level: log level at which error messages will be printed
 
         :return: dock's BuildResults object
         """
         tag = self.tag or self.image_name.to_str()
         target_registries = [self.registry] if self.registry else None
 
-        dock.set_logging(level=log_level)
-        logger.info('Building image "{0}"'.format(tag))
+        # dock's logging during build isn't really useful, send it to logfile only
+        dock.set_logging(level=logging.DEBUG, handler=atomicapp_builder.file_handler)
+        logger.info('Building image {0} ...'.format(tag))
         response = dapi.build_image_using_hosts_docker(
             self.build_image,
             {'provider': 'path', 'uri': 'file://' + self.df_path},

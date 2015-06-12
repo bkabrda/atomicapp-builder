@@ -92,28 +92,28 @@ def build(args):
             image_name,
             registry=args['docker_registry'],
             registry_insecure=args['registry_insecure'])
-        build_results[image_name] = bldr.build(wait=True, log_level=args['log_level'])
+        build_results[image_name] = bldr.build()
 
     # found out which ones failed and succeeded and print this info
     failed = []
     succeeded = []
     for image, result in build_results.items():
-        # TODO: save build logs from individual builds to a log file for inspection?
+        logger.debug('Logs from build of image {0}'.format(image.repo))
+        for l in result.build_logs:
+            logger.debug(l)
         if result.return_code != 0:
-            for l in result.build_logs:
-                print(l)
             failed.append(image)
         else:
             succeeded.append(image)
 
     if succeeded:
+        imgs_ok = imgs_to_str(succeeded)
         if args['docker_registry']:
-            logger.info('Images built and pushed successfully:')
+            logger.info('Images built and pushed successfully: {0}'.format(imgs_ok))
         else:
-            logger.info('Images built successfully:')
-        print(imgs_to_str(succeeded).replace(' ', '\n'))
-    for f in failed:
-        print('Failed to build image {0}'.format(f.repo))
+            logger.info('Images built successfully: {0}'.format(imgs_ok))
+    if failed:
+        print('Failed to build images: {0}'.format(imgs_to_str(failed)))
     return len(failed)
 
 
@@ -125,6 +125,8 @@ def run():
         #  then then it doesn't propagate to supbarsers; so just check it here
         args['log_level'] = logging.INFO
     atomicapp_builder.set_logging(args['log_level'])
+    logger.debug('atomicapp-builder invoked:')
+    logger.debug('%s', ' '.join(sys.argv))
 
     if args['action'] == 'build':
         result = 1
