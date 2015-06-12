@@ -7,7 +7,9 @@ Usage:
 
 ```
 atomicapp-builder build [-h] [--cccp-index CCCP_INDEX]
-                             [--build-image BUILD_IMAGE] [-q | -v]
+                             [--build-image BUILD_IMAGE]
+                             [--docker-registry DOCKER_REGISTRY]
+                             [--registry-insecure] [-q | -v]
                              PATH | cccp:<app-id>
 
 positional arguments:
@@ -20,6 +22,12 @@ optional arguments:
                         https://raw.githubusercontent.com/kbsingh/cccp-index/master/index.yml
   --build-image BUILD_IMAGE
                         Name of image that Dock should use to build images (defaults to "buildroot")
+  --docker-registry DOCKER_REGISTRY
+                        URL of Docker registry to poll for existing images and
+                        push built images to. Must be without http/https
+                        scheme.
+  --registry-insecure   If used, plain http will be used to connect to
+                        registry instead of https
   -q, --quiet           Only output names of built images after build is done
   -v, --verbose         Print lots of debugging information
 ```
