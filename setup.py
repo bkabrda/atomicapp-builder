@@ -15,7 +15,7 @@ setup(
     author='Slavek Kabrda',
     author_email='slavek@redhat.com',
     license='BSD',
-    packages=find_packages(),
+    packages=['atomicapp_builder'],
     entry_points={
         'console_scripts': ['atomicapp-builder=atomicapp_builder.cli:run'],
     },
