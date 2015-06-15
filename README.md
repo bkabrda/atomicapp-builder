@@ -36,3 +36,11 @@ Requires `anymarkup`, `requests` and `dock`. You can get the first two just by t
 `pip install --user -r requirements.txt` and you can get `dock` from
 https://github.com/DBuildService/dock. This also requires `dock`'s build image. You
 can either get one by `docker pull slavek/buildroot` or build one yourself.
+
+You can get stable versions from PyPI by using
+
+```
+pip install --user --process-dependency-links atomicapp-builder
+```
+
+Note: you *must* use `--process-dependency-links` so that pip installs the correct `dock` package.
