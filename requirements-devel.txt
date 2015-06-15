@@ -1,4 +1,3 @@
 -r requirements.txt
--e git+https://github.com/DBuildService/dock.git#egg=dock
 flexmock
 pytest
