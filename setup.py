@@ -7,7 +7,7 @@ except:
     from distutils.core import setup, find_packages
 
 setup(
-    name='atomicapp_builder',
+    name='atomicapp-builder',
     version='0.0.1',
     description='Application for building Atomicapps',
     long_description=''.join(open('README.md').readlines()),
