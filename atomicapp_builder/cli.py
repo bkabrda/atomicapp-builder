@@ -80,8 +80,8 @@ def build(args):
         args['docker_registry'],
         args['registry_insecure'],
         tmpdir).resolve()
-    logger.info('Images already built: {0}'.format(imgs_to_str(already_built) or '<None>'))
-    logger.info('Images to build: {0}'.format(imgs_to_str(to_build) or '<None>'))
+    logger.info('Images already built: %s', imgs_to_str(already_built) or '<None>')
+    logger.info('Images to build: %s', imgs_to_str(to_build) or '<None>')
 
     build_results = {}
     # we build one by one, since builder is not thread safe (because dock is not)
@@ -98,7 +98,7 @@ def build(args):
     failed = []
     succeeded = []
     for image, result in build_results.items():
-        logger.debug('Logs from build of image {0}'.format(image.repo))
+        logger.debug('Logs from build of image %s', image.repo)
         for l in result.build_logs:
             logger.debug(l)
         if result.return_code != 0:
@@ -109,9 +109,9 @@ def build(args):
     if succeeded:
         imgs_ok = imgs_to_str(succeeded)
         if args['docker_registry']:
-            logger.info('Images built and pushed successfully: {0}'.format(imgs_ok))
+            logger.info('Images built and pushed successfully: %s', imgs_ok)
         else:
-            logger.info('Images built successfully: {0}'.format(imgs_ok))
+            logger.info('Images built successfully: %s', imgs_ok)
     if failed:
         print('Failed to build images: {0}'.format(imgs_to_str(failed)))
     return len(failed)
@@ -135,5 +135,5 @@ def run():
         except exceptions.AtomicappBuilderException as e:
             logger.error(e.to_str())
         except Exception as e:
-            logger.exception('Exception while running {0}:'.format(sys.argv[0]))
+            logger.exception('Exception while running %s:', sys.argv[0])
         sys.exit(result)

@@ -19,17 +19,16 @@ class DockerRegistry(object):
         url = url + '/v1/repositories/{0}/tags'.format(image.to_str(registry=False, tag=False))
         ret = False
         try:
-            logger.debug('Polling {0} to see if image {1} exists'.format(url, image))
+            logger.debug('Polling %s to see if image %s exists', url, image)
             r = requests.get(url)
             if r.status_code == 200:
-                logger.debug('Image {0} exists'.format(image))
+                logger.debug('Image %s exists', image)
                 ret = True
             else:
-                logger.debug('Image {0} does not exist'.format(image))
+                logger.debug('Image %s does not exist', image)
         except requests.exceptions.SSLError as e:
-            raise exceptions.AtomicappBuilderException(
-                    'SSL error while polling registry: {0}'.format(e))
+            raise exceptions.AtomicappBuilderException('SSL error while polling registry: %s', e)
         except Exception as e:
-            logger.debug('Image {0} does not seem to exist, exception was: {1}'.format(image, e))
+            logger.debug('Image %s does not seem to exist, exception was: %s', image, e)
 
         return ret

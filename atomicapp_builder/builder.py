@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 class Builder(object):
     def __init__(self, build_image, df_path, image_name, tag=None,
-            registry=None, registry_insecure=False):
+                 registry=None, registry_insecure=False):
         self.build_image = build_image
         self.df_path = df_path
         self.image_name = image_name
@@ -28,7 +28,7 @@ class Builder(object):
 
         # dock's logging during build isn't really useful, send it to logfile only
         dock.set_logging(level=logging.DEBUG, handler=atomicapp_builder.file_handler)
-        logger.info('Building image {0} ...'.format(tag))
+        logger.info('Building image %s ...', tag)
         response = dapi.build_image_using_hosts_docker(
             self.build_image,
             {'provider': 'path', 'uri': 'file://' + self.df_path},
@@ -37,5 +37,4 @@ class Builder(object):
             target_registries_insecure=self.registry_insecure
         )
 
-        # TODO: handle "wait"
         return response

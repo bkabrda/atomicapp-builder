@@ -40,7 +40,7 @@ class Resolver(object):
         """
         # TODO: can be named differently; inspect .cccp.yaml to find out
         nlc_path = os.path.join(path, 'Nulecule')
-        logger.debug('Reading Nulecule from: {0}'.format(nlc_path))
+        logger.debug('Reading Nulecule from: %s', nlc_path)
         nlc_content = anymarkup.parse_file(nlc_path)
         # TODO: we want to implement graph as object and hide details and potential
         #  differencies in Nulecule spec versions behind it
@@ -61,16 +61,17 @@ class Resolver(object):
 
         if found is None:
             raise exceptions.AtomicappBuilderException(
-                'Project "{0}" not found in index, cannot proceed'.format(appid))
+                'Project "%s" not found in index, cannot proceed', appid)
 
         try:
-            logger.debug('Checking out application {0}'.format(appid))
+            logger.debug('Checking out application %s', appid)
             cmd = ['git', '-C', self.tmpdir, 'clone', found['git-url'], appid]
             if 'git-branch' in found and found['git-branch']:
                 cmd.extend(['-b', found['git-branch']])
             subprocess.check_call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            logger.debug('Application {0} checked out at {1}'\
-                    .format(appid, os.path.join(self.tmpdir, appid)))
+            logger.debug(
+                'Application %s checked out at %s',
+                appid, os.path.join(self.tmpdir, appid))
         except (OSError, subprocess.CalledProcessError) as ex:
             raise exceptions.AtomicappBuilderException(ex)
 
