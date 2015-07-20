@@ -1,7 +1,7 @@
 import logging
 
-import dock
-from dock import api as dapi
+import atomic_reactor
+from atomic_reactor import api as arapi
 
 import atomicapp_builder
 
@@ -19,17 +19,17 @@ class Builder(object):
         self.registry_insecure = registry_insecure
 
     def build(self):
-        """Build Docker image using dock.
+        """Build Docker image using atomic_reactor.
 
-        :return: dock's BuildResults object
+        :return: atomic_reactor's BuildResults object
         """
         tag = self.tag or self.image_name.to_str()
         target_registries = [self.registry] if self.registry else None
 
-        # dock's logging during build isn't really useful, send it to logfile only
-        dock.set_logging(level=logging.DEBUG, handler=atomicapp_builder.file_handler)
+        # atomic_reactor's logging during build isn't really useful, send it to logfile only
+        atomic_reactor.set_logging(level=logging.DEBUG, handler=atomicapp_builder.file_handler)
         logger.info('Building image %s ...', tag)
-        response = dapi.build_image_using_hosts_docker(
+        response = arapi.build_image_using_hosts_docker(
             self.build_image,
             {'provider': 'path', 'uri': 'file://' + self.df_path},
             tag,

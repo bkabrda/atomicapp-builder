@@ -27,8 +27,8 @@ def create_parser():
     build_sp.add_argument(
         '--build-image',
         dest='build_image',
-        help='Name of image that Dock should use to build images (defaults to "buildroot")',
-        default='buildroot')
+        help='Name of image that Dock should use to build images (defaults to "atomic-reactor")',
+        default='atomic-reactor')
     build_sp.add_argument(
         '--docker-registry',
         dest='docker_registry',

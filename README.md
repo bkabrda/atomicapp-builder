@@ -21,7 +21,7 @@ optional arguments:
                         URI of raw cccp index file (can be file:// for local file), defaults to
                         https://raw.githubusercontent.com/kbsingh/cccp-index/master/index.yml
   --build-image BUILD_IMAGE
-                        Name of image that Dock should use to build images (defaults to "buildroot")
+                        Name of image that Dock should use to build images (defaults to "atomic-reactor")
   --docker-registry DOCKER_REGISTRY
                         URL of Docker registry to poll for existing images and
                         push built images to. Must be without http/https
@@ -32,15 +32,10 @@ optional arguments:
   -v, --verbose         Print lots of debugging information
 ```
 
-Requires `anymarkup`, `requests` and `dock`. You can get the first two just by typing
-`pip install --user -r requirements.txt` and you can get `dock` from
-https://github.com/DBuildService/dock. This also requires `dock`'s build image. You
-can either get one by `docker pull slavek/buildroot` or build one yourself.
+Requires `anymarkup`, `atomic_reactor` and `requests`. You can get the requirements just by typing `pip install --user -r requirements.txt`. This also requires Atomic Reactor build image. You can either get one by `docker pull slavek/atomic-reactor` or you can build one yourself.
 
 You can get stable versions from PyPI by using
 
 ```
-pip install --user --process-dependency-links atomicapp-builder
+pip install --user atomicapp-builder
 ```
-
-Note: you *must* use `--process-dependency-links` so that pip installs the correct `dock` package.

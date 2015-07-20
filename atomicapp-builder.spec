@@ -30,8 +30,7 @@ BuildRequires:  python2-devel
 BuildRequires:  python-setuptools
  
 Requires:       python-anymarkup
-# TODO: depend on dock > 1.3.4 when it is released
-Requires:       python-dock
+Requires:       python-atomic-reactor
 Requires:       python-requests
 Requires:       python-setuptools
 

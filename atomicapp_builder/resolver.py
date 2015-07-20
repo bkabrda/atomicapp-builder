@@ -3,7 +3,7 @@ import os
 import subprocess
 
 import anymarkup
-import dock.util
+import atomic_reactor.util
 import requests
 
 from atomicapp_builder import exceptions
@@ -101,7 +101,8 @@ class Resolver(object):
     def resolve(self):
         """Resolve built and nonbuilt images.
 
-        :return: 2-tuple of two dicts in form {<dock.util.ImageName()>: path_to_cloned_repo}
+        :return: 2-tuple of two dicts in form
+            {<atomic_reactor.util.ImageName()>: path_to_cloned_repo}
             the first dict contains already built images, the second dict nonbuilt images
         """
         self.read_cccp_index()
@@ -115,7 +116,7 @@ class Resolver(object):
         nonbuilt = {}
 
         for dep, path in alldeps.items():
-            img_name = dock.util.ImageName(registry=self.docker_registry_url, repo=dep)
+            img_name = atomic_reactor.util.ImageName(registry=self.docker_registry_url, repo=dep)
             if self.docker_registry and self.docker_registry.has_image(img_name):
                 built[img_name] = path
             else:

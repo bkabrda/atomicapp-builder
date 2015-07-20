@@ -2,7 +2,7 @@ import os
 import shutil
 import tempfile
 
-from dock.util import ImageName
+from atomic_reactor.util import ImageName
 from flexmock import flexmock
 import pytest
 import requests

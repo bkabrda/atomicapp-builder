@@ -16,15 +16,7 @@ setup(
     entry_points={
         'console_scripts': ['atomicapp-builder=atomicapp_builder.cli:run'],
     },
-    # TODO: parse this from requirements.txt when dock is distributed through PyPI
-    install_requires=[
-        'anymarkup',
-        'dock==1.3.5',
-        'requests',
-    ],
-    dependency_links=[
-        'https://github.com/DBuildService/dock/tarball/master#egg=dock-1.3.5',
-    ],
+    install_requires=open('requirements.txt').read().splitlines(),
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
