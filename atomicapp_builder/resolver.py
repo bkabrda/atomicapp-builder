@@ -1,13 +1,10 @@
 import logging
-import os
-import subprocess
 
 import anymarkup
-import atomic_reactor.util
 import requests
 
-from atomicapp_builder import exceptions
-from atomicapp_builder import docker_registry
+from atomicapp_builder.docker_registry import DockerRegistry
+from atomicapp_builder.atomicapp import AtomicApp
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +18,7 @@ class Resolver(object):
         self.registry_insecure = registry_insecure
         if docker_registry_url:
             self.docker_registry = \
-                docker_registry.DockerRegistry(docker_registry_url, registry_insecure)
+                DockerRegistry(docker_registry_url, registry_insecure)
         else:
             self.docker_registry = None
         self.cccp_index = None
@@ -34,92 +31,35 @@ class Resolver(object):
             fetched = requests.get(self.cccp_index_uri)
             self.cccp_index = anymarkup.parse(fetched.text)
 
-    def read_nulecule(self, path):
-        """Return id of this app and it's graph. The returned graph is in form
-        {<name>: <other_graph_object_attrs>}.
+    def check_images_exist(self, apps):
+        """Checks if images exist for given iterable of AtomicApps, sets the `built` attribute
+        correctly for all images of these AtomicApps.
         """
-        # TODO: can be named differently; inspect .cccp.yaml to find out
-        nlc_path = os.path.join(path, 'Nulecule')
-        logger.debug('Reading Nulecule from: %s', nlc_path)
-        nlc_content = anymarkup.parse_file(nlc_path)
-        # TODO: we want to implement graph as object and hide details and potential
-        #  differencies in Nulecule spec versions behind it
-        appid = nlc_content['id']
-        graph = nlc_content['graph']
-        appgraph = {}
-        for item in graph:
-            key = item.pop('name')
-            appgraph[key] = item
-        return appid, appgraph
-
-    def checkout_app(self, appid):
-        found = None
-        for entry in self.cccp_index['Projects']:
-            if entry['app-id'] == appid:
-                found = entry
-                break
-
-        if found is None:
-            raise exceptions.AtomicappBuilderException(
-                'Project "%s" not found in index, cannot proceed', appid)
-
-        try:
-            logger.debug('Checking out application %s', appid)
-            cmd = ['git', '-C', self.tmpdir, 'clone', found['git-url'], appid]
-            if 'git-branch' in found and found['git-branch']:
-                cmd.extend(['-b', found['git-branch']])
-            subprocess.check_call(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            logger.debug(
-                'Application %s checked out at %s',
-                appid, os.path.join(self.tmpdir, appid))
-        except (OSError, subprocess.CalledProcessError) as ex:
-            raise exceptions.AtomicappBuilderException(ex)
-
-        return os.path.join(self.tmpdir, appid, found['git-path'] or '')
-
-    def get_all_appids(self, top_app):
-        """Returns ids of all apps that given top_app depends on.
-
-        :param top_app: path to top_app to resolve dependencies for
-
-        :return: mapping - `{<app_id>: <path_to_cloned_git_repo>, ...}`
-        """
-        this_appid, alldeps = self.read_nulecule(top_app)
-        to_build = {this_appid: top_app}
-        while len(alldeps) > 0:
-            depid, depattrs = alldeps.popitem()
-            if 'source' in depattrs:  # if 'source' is there, it's a dep that we must check
-                # TODO: check if it's in provided registry or not
-                # TODO: if it's in the provided registry, can we be sure that all it's deps are?
-                # TODO: what to do with deps marked as "skip" in .cccp.yaml
-                if depid not in to_build:
-                    dep_path = self.checkout_app(depid)
-                    to_build[depid] = dep_path
-                    alldeps.update(self.read_nulecule(dep_path)[1])
-        return to_build
+        for app in apps:
+            #TODO: check binary images
+            # check only local registry for meta images
+            if self.docker_registry and self.docker_registry.has_image(app.meta_image):
+                app.meta_image.built = True
 
     def resolve(self):
-        """Resolve built and nonbuilt images.
+        """Resolve inter-app dependencies recursively and check whether meta and binary images
+        exist.
 
-        :return: 2-tuple of two dicts in form
-            {<atomic_reactor.util.ImageName()>: path_to_cloned_repo}
-            the first dict contains already built images, the second dict nonbuilt images
+        :return: List of AtomicApp objects with resolved binary images and dependencies
         """
         self.read_cccp_index()
-        if self.top_app.startswith('cccp:'):
-            top_app_path = self.checkout_app(self.top_app[len('cccp:'):])
-        else:
-            top_app_path = self.top_app
+        unresolved = set(
+            [AtomicApp(self.top_app, self.cccp_index, self.docker_registry_url, self.tmpdir)]
+        )
+        resolved = set()
+        while len(unresolved) > 0:
+            app = unresolved.pop()
+            app.process_deps(resolved)
+            resolved.add(app)
+            for dep in app.processed_deps:
+                if dep.appid not in map(lambda a: a.appid, resolved):
+                    unresolved.add(dep)
 
-        alldeps = self.get_all_appids(top_app_path)
-        built = {}
-        nonbuilt = {}
+        self.check_images_exist(resolved)
 
-        for dep, path in alldeps.items():
-            img_name = atomic_reactor.util.ImageName(registry=self.docker_registry_url, repo=dep)
-            if self.docker_registry and self.docker_registry.has_image(img_name):
-                built[img_name] = path
-            else:
-                nonbuilt[img_name] = path
-
-        return built, nonbuilt
+        return list(sorted(resolved))

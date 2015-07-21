@@ -4,7 +4,7 @@ import tempfile
 import sys
 
 import atomicapp_builder
-from atomicapp_builder import builder
+from atomicapp_builder.builder import Builder
 from atomicapp_builder import constants
 from atomicapp_builder import exceptions
 from atomicapp_builder import resolver
@@ -70,51 +70,43 @@ def create_parser():
 
 
 def build(args):
-    imgs_to_str = lambda imgs: ' '.join([i.repo for i in imgs])
-
     # first resolve the images that were already built and that we'll need to build
+    # TODO: remove tmpdir when done
     tmpdir = tempfile.mkdtemp()
-    already_built, to_build = resolver.Resolver(
+    apps = resolver.Resolver(
         args['what'],
         args['cccp_index'],
         args['docker_registry'],
         args['registry_insecure'],
         tmpdir).resolve()
-    logger.info('Images already built: %s', imgs_to_str(already_built) or '<None>')
-    logger.info('Images to build: %s', imgs_to_str(to_build) or '<None>')
 
-    build_results = {}
-    # we build one by one, since builder is not thread safe (because dock is not)
-    for image_name, df_path in to_build.items():
-        bldr = builder.Builder(
-            args['build_image'],
-            df_path,
-            image_name,
-            registry=args['docker_registry'],
-            registry_insecure=args['registry_insecure'])
-        build_results[image_name] = bldr.build()
-
-    # found out which ones failed and succeeded and print this info
-    failed = []
-    succeeded = []
-    for image, result in build_results.items():
-        logger.debug('Logs from build of image %s', image.repo)
-        for l in result.build_logs:
-            logger.debug(l)
-        if result.return_code != 0:
-            failed.append(image)
+    func_result = 0
+    for a in apps:
+        if a.meta_image.built:
+            logger.info('Meta image for app "{0}" already built.'.format(a.appid))
         else:
-            succeeded.append(image)
+            doing_what = 'Building'
+            if args['docker_registry']:
+                doing_what += 'and pushing'
+            logger.info('{doing} meta image "{mi}" for app "{app}" ...'.
+                        format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid))
+            bldr = Builder(
+                args['build_image'],
+                a.meta_image,
+                registry=args['docker_registry'],
+                registry_insecure=args['registry_insecure'],
+            )
+            res = bldr.build()
+            if not res:
+                func_result = 1
+            for l in a.meta_image.build_result.build_logs:
+                logger.debug(l)
+            logger.info('{doing} meta image "{mi}" for app "{app}" {result}.'.
+                        format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid,
+                               result='succeeded' if res else 'failed')
+                        )
 
-    if succeeded:
-        imgs_ok = imgs_to_str(succeeded)
-        if args['docker_registry']:
-            logger.info('Images built and pushed successfully: %s', imgs_ok)
-        else:
-            logger.info('Images built successfully: %s', imgs_ok)
-    if failed:
-        print('Failed to build images: {0}'.format(imgs_to_str(failed)))
-    return len(failed)
+    return func_result
 
 
 def run():

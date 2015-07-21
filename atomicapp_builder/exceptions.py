@@ -4,4 +4,7 @@ class AtomicappBuilderException(Exception):
         self.cause = cause
 
     def to_str(self):
-        return str(self.cause)
+        ret = str(self.cause)
+        if hasattr(self.cause, 'output'):
+            ret += ' Subprocess output: {0}'.format(self.cause.output)
+        return ret
