@@ -9,5 +9,6 @@ build
 sdist
 
 *.sqlite3
+.ropeproject
 
 atomicapp-builder.log

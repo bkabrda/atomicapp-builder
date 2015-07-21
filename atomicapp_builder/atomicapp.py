@@ -120,3 +120,6 @@ class AtomicApp(object):
                 )
 
         self.deps_were_processed = True
+
+    def __lt__(self, other):
+        return self.appid < other.appid

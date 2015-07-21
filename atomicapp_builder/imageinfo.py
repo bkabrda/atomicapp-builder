@@ -16,3 +16,6 @@ class ImageInfo(object):
 
     def name_str(self, *args, **kwargs):
         return self.imagename.to_str(*args, **kwargs)
+
+    def __lt__(self, other):
+        return self.imagename < other.imagename
