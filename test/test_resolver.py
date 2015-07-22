@@ -1,5 +1,6 @@
 import os
 
+import anymarkup
 from atomic_reactor.util import ImageName
 from flexmock import flexmock
 import pytest
@@ -82,6 +83,7 @@ class TestResolver(object):
         for b in meta_built | binary_built:
             class X(object):
                 status_code = 200
+                text = anymarkup.serialize({b.tag if b.tag else 'latest': 'somehash'}, 'json')
             flexmock(requests).should_receive('get').\
                 with_args(request_url.format(b.to_str(registry=False, tag=False))).and_return(X())
         for nb in meta_nonbuilt | binary_nonbuilt:
