@@ -87,7 +87,6 @@ def create_parser():
 def build(args):
     # first resolve the images that were already built and that we'll need to build
     with TempDir(keep=args['keep_tmpdir']) as tmpdir:
-        print(tmpdir)
         apps = resolver.Resolver(
             args['what'],
             args['cccp_index'],
