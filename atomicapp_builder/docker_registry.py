@@ -23,6 +23,7 @@ class DockerRegistry(object):
             logger.debug('Polling %s to see if image %s exists', url, imageinfo.name_str())
             r = requests.get(url)
             if r.status_code == 200:
+                # TODO: if image has tag, check it
                 logger.debug('Image %s exists', imageinfo.name_str())
                 ret = True
             else:

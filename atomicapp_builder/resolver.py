@@ -36,10 +36,14 @@ class Resolver(object):
         correctly for all images of these AtomicApps.
         """
         for app in apps:
-            #TODO: check binary images
             # check only local registry for meta images
             if self.docker_registry and self.docker_registry.has_image(app.meta_image):
                 app.meta_image.built = True
+            # for now, also only check local registry for binary images
+            # TODO: do we want to check any registry that system docker uses?
+            for i in app.binary_images:
+                if self.docker_registry and self.docker_registry.has_image(i):
+                    i.built = True
 
     def resolve(self):
         """Resolve inter-app dependencies recursively and check whether meta and binary images

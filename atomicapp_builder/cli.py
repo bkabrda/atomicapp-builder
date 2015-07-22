@@ -41,6 +41,13 @@ def create_parser():
         help='If used, plain http will be used to connect to registry instead of https',
         action='store_true',
         default=False)
+    build_sp.add_argument(
+        '--check-binary-images',
+        dest='check_binary_images',
+        # TODO: do we want to check standard means of obtaining the image (e.g. docker.io)?
+        help='Check whether binary images are obtainable from given registry',
+        action='store_true',
+        default=False)
     # TODO: we would need to be able to specify tags for all built images,
     #  so we'll have to think of something smarter than just one tag, probably
     # build_sp.add_argument(
@@ -48,6 +55,7 @@ def create_parser():
     #    dest='tag',
     #    help='Tag for the resulting image (app id will be used if tag is not provided)',
     #    default=None)
+
     log_level_ag = build_sp.add_mutually_exclusive_group()
     log_level_ag.add_argument(
         '-q', '--quiet',
@@ -105,8 +113,23 @@ def build(args):
                         format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid,
                                result='succeeded' if res else 'failed')
                         )
+    if args['check_binary_images']:
+        func_result = func_result or _check_binary_images(apps)
 
     return func_result
+
+
+def _check_binary_images(apps):
+    res = 0
+    for app in apps:
+        logger.info('Checking for binary images required for app "{0}" ...'.format(app.appid))
+        for bi in app.binary_images:
+            if bi.built:
+                logger.info('Binary image "{0}" exists.'.format(bi.imagename))
+            else:
+                logger.error('Binary image "{0}" doesn\'t exist'.format(bi.imagename))
+                res = 2
+    return res
 
 
 def run():

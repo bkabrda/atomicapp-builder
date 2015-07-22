@@ -32,14 +32,14 @@ class AtomicApp(object):
         self.appid = self.parsed_nulecule['id']
 
         # first, construct the ImangeName for meta image and then meta image itself
-        meta_image_name = ImageName(registry=local_registry_uri, repo=self.appid)
+        meta_image_name = ImageName(registry=self.local_registry_uri, repo=self.appid)
         self.meta_image = ImageInfo(
             imagename=meta_image_name,
             vcs_url=self.find_cccp_index_entry()['git-url'],
             vcs_type='git',
             vcs_local_path=os.path.dirname(self.nulecule_file),
             # for meta image, buildconfig always looks like this
-            buildconfigs={
+            build_configs={
                 'stable': self.find_cccp_index_entry()['git-branch'],
                 'latest': self.find_cccp_index_entry()['git-branch'],
             },
@@ -55,7 +55,7 @@ class AtomicApp(object):
             if 'source' in item:  # if 'source' is there, it's a dependency
                 self.unprocessed_deps.append(item['name'])
             elif 'images' in item:  # else we process binary images
-                self.process_binary_images()
+                self.process_binary_images(item)
             else:
                 pass  # nothing to process in this item - TODO is this an error?
 
@@ -93,8 +93,19 @@ class AtomicApp(object):
     def parse_nulecule(self):
         self.parsed_nulecule = anymarkup.parse_file(self.nulecule_file)
 
-    def process_binary_images(self):
-        pass  # TODO :)
+    def process_binary_images(self, graph_item):
+        images = graph_item['images']
+        for img in images:
+            kwargs = {}
+            # we'll only pass arguments that are provided in Nulecule file
+            for k in ['vcs_url', 'vcs_type', 'vcs_image_buildfile', 'image_type', 'build_configs']:
+                if k in img:
+                    kwargs[k] = img[k]
+            kwargs['imagename'] = ImageName.parse(img['name'])
+            # for now, we just replace the registry with our local one
+            # TODO: maybe use it just for images that don't have any registry?
+            kwargs['imagename'].registry = self.local_registry_uri
+            self.binary_images.append(ImageInfo(**kwargs))
 
     def process_deps(self, globally_processed):
         # TODO: what to do with deps marked as "skip" in .cccp.yaml?

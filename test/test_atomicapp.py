@@ -25,7 +25,7 @@ class TestAtomicApp(object):
         assert a.meta_image.vcs_image_buildfile == 'Dockerfile'
         assert a.meta_image.image_type == 'docker'
         assert a.meta_image.is_meta is True
-        assert a.meta_image.buildconfigs == {
+        assert a.meta_image.build_configs == {
             'stable': 'master',
             'latest': 'master',
         }
