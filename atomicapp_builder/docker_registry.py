@@ -1,8 +1,9 @@
 import logging
 
+import anymarkup
 import requests
 
-from atomicapp_builder import exceptions
+from atomicapp_builder.exceptions import AtomicappBuilderException
 
 logger = logging.getLogger(__name__)
 
@@ -23,13 +24,19 @@ class DockerRegistry(object):
             logger.debug('Polling %s to see if image %s exists', url, imageinfo.name_str())
             r = requests.get(url)
             if r.status_code == 200:
-                # TODO: if image has tag, check it
+                tags = anymarkup.parse(r.text)
+                look_for_tag = imageinfo.imagename.tag or 'latest'
+                if look_for_tag not in tags:
+                    raise AtomicappBuilderException(
+                        'Image "{0}" exists, but it doesn\'t have tag "{1}"'.format(
+                            imageinfo.name_str(), look_for_tag)
+                    )
                 logger.debug('Image %s exists', imageinfo.name_str())
                 ret = True
             else:
                 logger.debug('Image %s does not exist', imageinfo.name_str())
         except requests.exceptions.SSLError as e:
-            raise exceptions.AtomicappBuilderException('SSL error while polling registry: %s', e)
+            raise AtomicappBuilderException('SSL error while polling registry: {0}'.format(e))
         except Exception as e:
             logger.debug(
                 'Image %s does not seem to exist, exception was: %s',
