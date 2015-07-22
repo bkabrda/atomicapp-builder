@@ -85,10 +85,6 @@ def create_parser():
 
 
 def build(args):
-    if args['docker_registry'] and (args['docker_registry'].startswith('http://') or
-                                    args['docker_registry'].startswith('https://')):
-        logger.error('Docker registry URI must not start with http:// or https://')
-        return 10
     # first resolve the images that were already built and that we'll need to build
     with TempDir(keep=args['keep_tmpdir']) as tmpdir:
         apps = resolver.Resolver(
@@ -170,6 +166,13 @@ def run():
     atomicapp_builder.set_logging(args['log_level'])
     logger.debug('atomicapp-builder invoked:')
     logger.debug('%s', ' '.join(sys.argv))
+
+    if args['docker_registry']:
+        if args['docker_registry'].startswith('http://') or \
+                args['docker_registry'].startswith('https://'):
+            logger.error('Docker registry URI must not start with http:// or https://')
+            return 10
+        args['docker_registry'] = args['docker_registry'].rstrip('/')
 
     if args['action'] == 'build':
         result = 1
