@@ -1,6 +1,7 @@
 import argparse
 import logging
 import tempfile
+import shutil
 import sys
 
 import atomicapp_builder
@@ -48,6 +49,12 @@ def create_parser():
         help='Check whether binary images are obtainable from given registry',
         action='store_true',
         default=False)
+    build_sp.add_argument(
+        '--keep-tmpdir',
+        dest='keep_tmpdir',
+        help='Keep tmpdir with sources of all the resolved apps and print a path to it',
+        action='store_true',
+        default=False)
     # TODO: we would need to be able to specify tags for all built images,
     #  so we'll have to think of something smarter than just one tag, probably
     # build_sp.add_argument(
@@ -79,44 +86,46 @@ def create_parser():
 
 def build(args):
     # first resolve the images that were already built and that we'll need to build
-    # TODO: remove tmpdir when done
-    tmpdir = tempfile.mkdtemp()
-    apps = resolver.Resolver(
-        args['what'],
-        args['cccp_index'],
-        args['docker_registry'],
-        args['registry_insecure'],
-        tmpdir).resolve()
+    with TempDir(keep=args['keep_tmpdir']) as tmpdir:
+        print(tmpdir)
+        apps = resolver.Resolver(
+            args['what'],
+            args['cccp_index'],
+            args['docker_registry'],
+            args['registry_insecure'],
+            tmpdir).resolve()
 
-    func_result = 0
-    for a in apps:
-        if a.meta_image.built:
-            logger.info('Meta image for app "{0}" already built.'.format(a.appid))
-        else:
-            doing_what = 'Building'
-            if args['docker_registry']:
-                doing_what += 'and pushing'
-            logger.info('{doing} meta image "{mi}" for app "{app}" ...'.
-                        format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid))
-            bldr = Builder(
-                args['build_image'],
-                a.meta_image,
-                registry=args['docker_registry'],
-                registry_insecure=args['registry_insecure'],
-            )
-            res = bldr.build()
-            if not res:
-                func_result = 1
-            for l in a.meta_image.build_result.build_logs:
-                logger.debug(l)
-            logger.info('{doing} meta image "{mi}" for app "{app}" {result}.'.
-                        format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid,
-                               result='succeeded' if res else 'failed')
-                        )
-    if args['check_binary_images']:
-        func_result = func_result or _check_binary_images(apps)
+        func_result = 0
+        for a in apps:
+            if a.meta_image.built:
+                logger.info('Meta image for app "{0}" already built.'.format(a.appid))
+            else:
+                doing_what = 'Building'
+                if args['docker_registry']:
+                    doing_what += 'and pushing'
+                logger.info('{doing} meta image "{mi}" for app "{app}" ...'.
+                            format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid))
+                bldr = Builder(
+                    args['build_image'],
+                    a.meta_image,
+                    registry=args['docker_registry'],
+                    registry_insecure=args['registry_insecure'],
+                )
+                res = bldr.build()
+                if not res:
+                    func_result = 1
+                for l in a.meta_image.build_result.build_logs:
+                    logger.debug(l)
+                logger.info('{doing} meta image "{mi}" for app "{app}" {result}.'.
+                            format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid,
+                                   result='succeeded' if res else 'failed')
+                            )
+        if args['check_binary_images']:
+            func_result = func_result or _check_binary_images(apps)
+        if args['keep_tmpdir']:
+            logger.info('You can find sources of all apps in {0}'.format(tmpdir))
 
-    return func_result
+        return func_result
 
 
 def _check_binary_images(apps):
@@ -130,6 +139,22 @@ def _check_binary_images(apps):
                 logger.error('Binary image "{0}" doesn\'t exist'.format(bi.imagename))
                 res = 2
     return res
+
+
+class TempDir(object):
+    """A context manager that simulates tempfile.TemporaryDirectory, but can be told
+    to leave the directory untouched even after the context ends.
+    """
+    def __init__(self, suffix='', prefix='tmp', dir=None, keep=False):
+        self.name = tempfile.mkdtemp(suffix, prefix, dir)
+        self.keep = keep
+
+    def __enter__(self):
+        return self.name
+
+    def __exit__(self, exc, value, tb):
+        if not self.keep:
+            shutil.rmtree(self.name)
 
 
 def run():
