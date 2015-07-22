@@ -10,6 +10,8 @@ cache:
 
 install: 
 - pip install -r requirements-devel.txt
+- pip install pytest-cov coveralls
 - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install argparse; fi
 
-script: py.test
+script: py.test --cov atomicapp_builder
+after_success: coveralls
