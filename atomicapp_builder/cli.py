@@ -95,6 +95,7 @@ def build(args):
             tmpdir).resolve()
 
         func_result = 0
+        logger.info('Building apps %s', ', '.join(map(lambda a: a.appid, apps)))
         for a in apps:
             if a.meta_image.built:
                 logger.info('Meta image for app "{0}" already built.'.format(a.appid))
