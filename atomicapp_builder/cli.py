@@ -85,6 +85,10 @@ def create_parser():
 
 
 def build(args):
+    if args['docker_registry'] and (args['docker_registry'].startswith('http://') or
+                                    args['docker_registry'].startswith('https://')):
+        logger.error('Docker registry URI must not start with http:// or https://')
+        return 10
     # first resolve the images that were already built and that we'll need to build
     with TempDir(keep=args['keep_tmpdir']) as tmpdir:
         apps = resolver.Resolver(
@@ -99,7 +103,7 @@ def build(args):
             if a.meta_image.built:
                 logger.info('Meta image for app "{0}" already built.'.format(a.appid))
             else:
-                doing_what = 'Building'
+                doing_what = 'Building '
                 if args['docker_registry']:
                     doing_what += 'and pushing'
                 logger.info('{doing} meta image "{mi}" for app "{app}" ...'.
