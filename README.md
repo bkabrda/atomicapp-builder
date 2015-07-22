@@ -1,6 +1,10 @@
 Atomicapp Builder
 =================
 
+[![Build Status](https://travis-ci.org/bkabrda/atomicapp-builder.svg?branch=master)](https://travis-ci.org/bkabrda/atomicapp-builder)
+[![Code Health](https://landscape.io/github/bkabrda/atomicapp-builder/master/landscape.svg?style=flat)](https://landscape.io/github/bkabrda/atomicapp-builder/master)
+[![Coverage Status](https://coveralls.io/repos/bkabrda/atomicapp-builder/badge.svg?branch=master)](https://coveralls.io/r/bkabrda/atomicapp-builder?branch=master)
+
 An application to build application images from [Nulecule](https://github.com/projectatomic/nulecule).
 
 Usage:
