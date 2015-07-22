@@ -13,7 +13,8 @@ Usage:
 atomicapp-builder build [-h] [--cccp-index CCCP_INDEX]
                              [--build-image BUILD_IMAGE]
                              [--docker-registry DOCKER_REGISTRY]
-                             [--registry-insecure] [-q | -v]
+                             [--registry-insecure] [--check-binar-images]
+                             [-q | -v]
                              PATH | cccp:<app-id>
 
 positional arguments:
@@ -32,9 +33,14 @@ optional arguments:
                         scheme.
   --registry-insecure   If used, plain http will be used to connect to
                         registry instead of https
+  --check-binary-images
+                        Check whether binary images are obtainable from given
+                        registry
   -q, --quiet           Only output names of built images after build is done
   -v, --verbose         Print lots of debugging information
 ```
+
+Note: checking for binary images for an application expects usage of [Nulecule Images](https://github.com/bkabrda/nulecule-images/) extension.
 
 Requires `anymarkup`, `atomic_reactor` and `requests`. You can get the requirements just by typing `pip install --user -r requirements.txt`. This also requires Atomic Reactor build image. You can either get one by `docker pull slavek/atomic-reactor` or you can build one yourself.
 
