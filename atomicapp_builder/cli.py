@@ -56,6 +56,12 @@ def create_parser():
         help='Keep tmpdir with sources of all the resolved apps and print a path to it',
         action='store_true',
         default=False)
+    build_sp.add_argument(
+        '--force-rebuild',
+        dest='force_rebuild',
+        help='Rebuild even if images are available in provided registry',
+        action='store_true',
+        default=False)
     # TODO: we would need to be able to specify tags for all built images,
     #  so we'll have to think of something smarter than just one tag, probably
     # build_sp.add_argument(
@@ -98,8 +104,8 @@ def build(args):
         func_result = 0
         logger.info('Building apps %s', ', '.join(map(lambda a: a.appid, apps)))
         for a in apps:
-            if a.meta_image.built:
-                logger.info('Meta image for app "{0}" already built.'.format(a.appid))
+            if a.meta_image.built and not args['force_rebuild']:
+                logger.info('Meta image for app "{0}" already built, skipping'.format(a.appid))
             else:
                 doing_what = 'Building '
                 if args['docker_registry']:
