@@ -52,3 +52,9 @@ class TestAtomicApp(object):
         assert list(sorted(
             map(lambda a: str(a.meta_image.imagename), a.processed_deps)
         )) == ['appfour', 'apptwo']
+
+    def test_cccp_and_different_Nulecule_name(self, tmpdir):
+        path = prep_app('appfour', tmpdir, 'stable')
+        a = AtomicApp(path, self.cccp_index, None, str(tmpdir))
+        assert a.parsed_cccp['nulecule-file'] == 'newlycool'
+        assert a.parsed_nulecule['id'] == 'appfour'

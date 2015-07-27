@@ -14,19 +14,17 @@ logger = logging.getLogger(__name__)
 
 class AtomicApp(object):
     def __init__(self, app_path, cccp_index, local_registry_uri, tmpdir):
+        self.app_path = app_path
         self.cccp_index = cccp_index
         self.cccp_index_entry = None
         self.local_registry_uri = local_registry_uri
         self.tmpdir = tmpdir
 
-        if app_path.startswith('cccp:'):
-            self.appid = app_path[len('cccp:'):]
-            app_path = self.checkout()
-        # TODO: it's possible that this is named differently, read it from .cccp.yaml
-        self.nulecule_file = os.path.join(app_path, 'Nulecule')
-        if not os.path.exists(self.nulecule_file):
-            raise AtomicappBuilderException(
-                'Nulecule file "{0}" doesn\'t exist'.format(self.nulecule_file))
+        if self.app_path.startswith('cccp:'):
+            self.appid = self.app_path[len('cccp:'):]
+            self.app_path = self.checkout()
+
+        self.parse_cccp()
         self.parse_nulecule()
 
         self.appid = self.parsed_nulecule['id']
@@ -91,7 +89,24 @@ class AtomicApp(object):
         return os.path.join(self.local_path, entry['git-path'] or '')
 
     def parse_nulecule(self):
+        self.nulecule_file = os.path.join(
+            self.app_path,
+            self.parsed_cccp.get('nulecule-file', 'Nulecule')
+        )
+        if not os.path.exists(self.nulecule_file):
+            raise AtomicappBuilderException(
+                'Nulecule file "{0}" doesn\'t exist'.format(self.nulecule_file))
         self.parsed_nulecule = anymarkup.parse_file(self.nulecule_file)
+
+    def parse_cccp(self):
+        self.cccp_path = os.path.join(self.app_path, '.cccp.yml')
+        if not os.path.exists(self.cccp_path):
+            self.cccp_path = os.path.join(self.app_path, 'cccp.yml')
+        # if cccp file doesn't exist, just silently skip it
+        self.parsed_cccp = {}
+        if os.path.exists(self.cccp_path):
+            self.parsed_cccp = anymarkup.parse_file(self.cccp_path)
+        print(self.parsed_cccp)
 
     def process_binary_images(self, graph_item):
         images = graph_item['images']
