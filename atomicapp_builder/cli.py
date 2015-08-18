@@ -57,9 +57,9 @@ def create_parser():
         action='store_true',
         default=False)
     build_sp.add_argument(
-        '--force-rebuild',
-        dest='force_rebuild',
-        help='Rebuild even if images are available in provided registry',
+        '--skip-if-in-registry',
+        dest='skip_if_present',
+        help='Skip building images that are available in provided registry',
         action='store_true',
         default=False)
     # TODO: we would need to be able to specify tags for all built images,
@@ -104,12 +104,12 @@ def build(args):
         func_result = 0
         logger.info('Building apps %s', ', '.join(map(lambda a: a.appid, apps)))
         for a in apps:
-            if a.meta_image.built and not args['force_rebuild']:
+            if a.meta_image.built and args['s-kip_if_present']:
                 logger.info('Meta image for app "{0}" already built, skipping'.format(a.appid))
             else:
-                doing_what = 'Building '
+                doing_what = 'Building'
                 if args['docker_registry']:
-                    doing_what += 'and pushing'
+                    doing_what += ' and pushing'
                 logger.info('{doing} meta image "{mi}" for app "{app}" ...'.
                             format(doing=doing_what, mi=a.meta_image.imagename, app=a.appid))
                 bldr = Builder(

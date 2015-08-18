@@ -14,7 +14,8 @@ atomicapp-builder build [-h] [--cccp-index CCCP_INDEX]
                              [--build-image BUILD_IMAGE]
                              [--docker-registry DOCKER_REGISTRY]
                              [--registry-insecure] [--check-binar-images]
-                             [--keep-tmpdir] [--force-rebuild] [-q | -v]
+                             [--keep-tmpdir] [--skip-if-in-registry]
+                             [-q | -v]
                              PATH | cccp:<app-id>
 
 positional arguments:
@@ -38,8 +39,8 @@ optional arguments:
                         registry
   --keep-tmpdir         Keep tmpdir with sources of all the resolved apps and
                         print a path to it
-  --force-rebuild       Rebuild even if images are available in provided
-                        registry
+  --skip-if-in-registry
+                        Skip building images that are available in provided
   -q, --quiet           Only output names of built images after build is done
   -v, --verbose         Print lots of debugging information
 ```
